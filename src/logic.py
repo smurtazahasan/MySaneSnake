@@ -26,8 +26,12 @@ def choose_move(data: dict) -> str:
 
   # Move Decision
   if len(possible_moves) > 0:
-    dir = move_for_food(foods, snakes, possible_moves)
-    if dir != None and (snakes[0]['length'] < max(highest_length(snakes), 16) or snakes[0]['health'] < 50): return dir
+    dir_food = move_for_food(foods, snakes, possible_moves)
+    dir_attack = _attack_head(snakes, possible_moves)
+
+    
+    if dir_food != None and (snakes[0]['length'] < max(highest_length(snakes) + 2, 10) or snakes[0]['health'] < 50): return dir_food
+    elif dir_attack != None: return dir_attack 
     else: return random.choice(list(possible_moves.keys()))
   print('Game Lost - No Possible Moves')
 
@@ -246,3 +250,23 @@ def _look_ahead(otherSnakes, possible_moves, my_length, my_id):
       if items in possible_moves:
         del possible_moves[items]
   return possible_moves
+
+def shortest_snake(snakes):
+  target = [float('inf'), (0, 0)]
+  my_snake = (snakes[0]['head']['x'], snakes[0]['head']['y'])
+  my_snake_length = snakes[0]['length']
+  del snakes[0]
+  for snake in snakes:
+    if snake['length'] < my_snake_length + 1 and math.dist((snake['head']['x'], snake['head']['y']), my_snake) < target[0]:
+      target = [math.dist((snake['head']['x'], snake['head']['y']), my_snake), (snake['head']['x'], snake['head']['y'])]
+  return target
+def _attack_head(snakes, possible_moves):
+  head_target = shortest_snake(snakes)
+  my_snake = (snakes[0]['head']['x'], snakes[0]['head']['y'])
+
+  for dir, future_move in possible_moves.items():
+      new_head = (future_move['x'], future_move['y'])
+
+      if math.dist(new_head, head_target[1]) < head_target[0]:
+          return dir
+  return None
